@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href=' https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+
     <title>ask me things</title>
     <style>
         * {
@@ -12,7 +14,7 @@
         }
 
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto';
             background: linear-gradient(135deg, #93B5C6, #5D5179);
             color: #333;
             min-height: 100vh;
@@ -36,17 +38,26 @@
         }
 
         button {
+            font-family: 'Roboto';
             margin-top: 10px;
             padding: 10px 20px;
             border: none;
             border-radius: 5px;
-            background-color: #808080;
-            color: white;
+            background-color: #D3D3D3;
+            color: #571F4E;
             cursor: pointer;
+            width: 400px;
         }
 
         button:hover {
             background-color: #571F4E;
+            color: white;
+        }
+
+        .exit {
+           width : 35px; 
+           background-color: #D3D3D3;
+           color: white;
         }
 
         .question-list {
@@ -64,6 +75,7 @@
             justify-content: space-between;
             align-items: center;
             cursor: grab;
+            text-align: left;
         }
 
         .question-list li.dragging {
@@ -79,10 +91,19 @@
 </head>
 <body>
     <div class="container">
-        <h1>Randomized Question List</h1>
-        <button id="randomize">Randomize Questions</button>
-        <button id="coupleToggle">Couple Questions</button>
-        <button id="icebreakerToggle">Icebreaker Questions</button>
+        <h1 id="title">questions?</h1>
+        <div class="btnGroup">
+            <button id="randomize">Randomize Questions</button>
+        </div>
+        <div class="btnGroup">
+            <button id="couple">Couple Questions</button>
+        </div>
+        <div class="btnGroup">
+            <button id="icebreaker1">Level 1 Icebreakers</button>
+            <button id ="icebreaker2">Level 2 Icebreakers</button>
+            <button id ="icebreaker3">Level 3 Icebreakers</button>
+            <button id ="cfc100">CFC100 (CFC Table Topics)</button>
+        </div>  
         <ul class="question-list" id="questionList"></ul>
         <button id="addQuestion">Add New Question</button>
     </div>
@@ -92,15 +113,11 @@
         let discardedQuestions = [];
         let currQuestions = [];
 
+        const title = document.getElementById('title');
         const questionList = document.getElementById('questionList');
         const randomizeButton = document.getElementById('randomize');
         const addQuestionButton = document.getElementById('addQuestion');
-        const coupleToggle = document.getElementById('coupleToggle');
-        const icebreakerToggle = document.getElementById('icebreakerToggle');
         const maxQuestions = 10;
-
-
-
 
         function fetchQuestions(fileName) {
             fetch(fileName)
@@ -111,9 +128,31 @@
                     displayQuestions();
                 });
         }
+        
+        couple.addEventListener('click', () => {
+            fetchQuestions('couple.txt');
+            title.textContent = "Questions for Couples";
+        });
 
-        coupleToggle.addEventListener('click', () => fetchQuestions('couple.txt'));
-        icebreakerToggle.addEventListener('click', () => fetchQuestions('icebreaker.txt'));
+        icebreaker1.addEventListener('click', () => {
+            fetchQuestions('icebreaker1.txt');
+            title.textContent = "Level 1 Icebreaker Questions";
+        });
+
+        icebreaker2.addEventListener('click', () => {
+            fetchQuestions('icebreaker2.txt');
+            title.textContent = "Level 2 Icebreaker Questions";
+        });
+
+        icebreaker3.addEventListener('click', () => {
+            fetchQuestions('icebreaker3.txt');
+            title.textContent = "Level 3 Icebreaker Questions";
+        });
+
+        cfc100.addEventListener('click', () => {
+            fetchQuestions('CFC100.txt');
+            title.textContent = "CFC Table Topics";
+        });
 
         function displayQuestions() {
             questionList.innerHTML = '';
@@ -136,6 +175,7 @@
 
                 const removeButton = document.createElement('button');
                 removeButton.textContent = 'X';
+                removeButton.className = "exit";
                 removeButton.addEventListener('click', () => removeQuestion(li));
 
                 controls.appendChild(removeButton);
@@ -180,7 +220,8 @@
         function removeQuestion(li) {
             const index = parseInt(li.dataset.index, 10); // Get the correct index from the data attribute
             if (!isNaN(index)) {
-                currQuestions.splice(index, 1); // Remove the question from the array
+                let temp = currQuestions.splice(index, 1); // Remove the question from the array
+                discardedQuestions.push(temp);
             }
 
             li.remove(); // Remove the corresponding DOM element
@@ -199,7 +240,7 @@
         function addNewQuestion() {
             const newQuestion = prompt("Enter a new question:");
             if (newQuestion) {
-                questions.push(newQuestion);
+                currQuestions.push(newQuestion);
                 displayQuestions();
             }
         }
