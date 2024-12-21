@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ask me things</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #93B5C6, #5D5179);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 20px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #808080;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #571F4E;
+        }
+
+        .question-list {
+            list-style: none;
+            margin: 20px 0;
+            padding: 0;
+        }
+
+        .question-list li {
+            background-color: #f4f4f9;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: grab;
+        }
+
+        .question-list li.dragging {
+            opacity: 0.5;
+        }
+
+        .controls button {
+            margin-left: 10px;
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Randomized Question List</h1>
+        <button id="randomize">Randomize Questions</button>
+        <button id="coupleToggle">Couple Questions</button>
+        <button id="icebreakerToggle">Icebreaker Questions</button>
+        <ul class="question-list" id="questionList"></ul>
+        <button id="addQuestion">Add New Question</button>
+    </div>
+
+    <script>
+        let questions = [];
+        let discardedQuestions = [];
+        let currQuestions = [];
+
+        const questionList = document.getElementById('questionList');
+        const randomizeButton = document.getElementById('randomize');
+        const addQuestionButton = document.getElementById('addQuestion');
+        const coupleToggle = document.getElementById('coupleToggle');
+        const icebreakerToggle = document.getElementById('icebreakerToggle');
+        const maxQuestions = 10;
+
+
+
+
+        function fetchQuestions(fileName) {
+            fetch(fileName)
+                .then(response => response.text())
+                .then(data => {
+                    questions = data.split('\n').filter(q => q.trim() !== '');
+                    randomizeQuestions();
+                    displayQuestions();
+                });
+        }
+
+        coupleToggle.addEventListener('click', () => fetchQuestions('couple.txt'));
+        icebreakerToggle.addEventListener('click', () => fetchQuestions('icebreaker.txt'));
+
+        function displayQuestions() {
+            questionList.innerHTML = '';
+            currQuestions.forEach((question, index) => {
+                const li = document.createElement('li');
+                li.textContent = question;
+                li.draggable = true;
+                li.dataset.index = index; // Attach the index as a data attribute
+
+                li.addEventListener('dragstart', () => {
+                    li.classList.add('dragging');
+                });
+
+                li.addEventListener('dragend', () => {
+                    li.classList.remove('dragging');
+                });
+
+                const controls = document.createElement('div');
+                controls.classList.add('controls');
+
+                const removeButton = document.createElement('button');
+                removeButton.textContent = 'X';
+                removeButton.addEventListener('click', () => removeQuestion(li));
+
+                controls.appendChild(removeButton);
+                li.appendChild(controls);
+                questionList.appendChild(li);
+            });
+    }
+
+
+        questionList.addEventListener('dragover', e => {
+            e.preventDefault();
+            const draggingElement = document.querySelector('.dragging');
+            const afterElement = getDragAfterElement(questionList, e.clientY);
+            if (afterElement == null) {
+                questionList.appendChild(draggingElement);
+            } else {
+                questionList.insertBefore(draggingElement, afterElement);
+            }
+        });
+
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('li:not(.dragging)')];
+
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        function randomizeQuestions() {
+            let qs = questions.sort(() => Math.random() - 0.5);
+            currQuestions = qs.slice(0, maxQuestions);
+            displayQuestions();
+        }
+
+        function removeQuestion(li) {
+            const index = parseInt(li.dataset.index, 10); // Get the correct index from the data attribute
+            if (!isNaN(index)) {
+                currQuestions.splice(index, 1); // Remove the question from the array
+            }
+
+            li.remove(); // Remove the corresponding DOM element
+            updateQuestionIndexes();
+        }
+
+
+        function updateQuestionIndexes() {
+            const listItems = document.querySelectorAll('.question-list li');
+            listItems.forEach((li, idx) => {
+                li.dataset.index = idx; // Update the data-index for all items
+            });
+        }
+
+
+        function addNewQuestion() {
+            const newQuestion = prompt("Enter a new question:");
+            if (newQuestion) {
+                questions.push(newQuestion);
+                displayQuestions();
+            }
+        }
+
+
+        randomizeButton.addEventListener('click', randomizeQuestions);
+        addQuestionButton.addEventListener('click', addNewQuestion);
+    </script>
+</body>
+</html>
